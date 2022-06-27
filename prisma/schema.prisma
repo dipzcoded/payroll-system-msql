@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model User {
+  @@map("user")
+  id Int  @id @default(autoincrement())
+  email String @db.VarChar(255) @unique
+  photo String @default("https://res.cloudinary.com/dbrlwhrg6/image/upload/v1629941837/eventify/user_zg5yhl.png")
+  signaturePhoto String
+  password String
+  role String @default("Employee")
+  passwordChangedAt DateTime
+  passwordResetToken String @db.VarChar(255)
+  passwordResetExpires DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employee Employee?
+}
+
+model Employee {
+  @@map("employee")
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  empId String @unique
+  staffId String @unique
+  gender String
+  nationality String
+  address String
+  dob DateTime
+  mobile String
+  city String
+  state String
+  contractSalary Int?
+  employeeType String
+  joinDate DateTime
+  employeeBank String
+  employeeBankAcctnumber String
+  isCctive Boolean @default(true)
+  deductions EmployeeDeduction[]
+  allowances EmployeeAllowance[]
+  departmentId Int
+  department Department @relation(fields: [departmentId], references: [id])
+  positionId Int
+  position Position @relation(fields: [positionId], references: [id])
+  salaryLevelId Int
+  salaryLevel SalaryLevel @relation(fields: [salaryLevelId], references: [id])
+  salaryStepId Int
+  salaryStep SalaryStep @relation(fields: [salaryStepId], references: [id])
+  notchId Int
+  notch SalaryStepNotch @relation(fields: [notchId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  payslips Payslip[]
+}
+
+model EmployeeDeduction {
+  @@map("employeededuction")
+  id Int @id @default(autoincrement())
+  feeType String
+  fee Int
+  remark String @db.VarChar(255)
+  employeeId Int
+  employee Employee @relation(fields: [employeeId], references: [id])
+  deductionId Int
+  deduction Deduction @relation(fields: [deductionId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmployeeAllowance {
+  @@map("employeeallowance")
+  id Int @id @default(autoincrement())
+  feeType String
+  fee Int
+  remark String @db.VarChar(255)
+  employeeId Int
+  employee Employee @relation(fields: [employeeId], references: [id])
+  allowanceId Int
+  allowance Allowance @relation(fields: [allowanceId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  @@map("department")
+  id Int  @id @default(autoincrement())
+  name String @unique
+  isActive Boolean @default(true)
+  positions Position[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employees Employee[]
+}
+
+model Position {
+  @@map("position")
+  id Int @id @default(autoincrement()) 
+  name String @unique
+  isActive Boolean @default(true)
+  department Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employees Employee[]
+}
+
+model Allowance {
+  @@map("allowance")
+  id Int @id @default(autoincrement()) 
+  name String @unique
+  description String @db.VarChar(500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employeeAllowances EmployeeAllowance[]
+}
+
+model Deduction {
+  @@map("deduction")
+  id Int @id @default(autoincrement()) 
+  name String @unique
+  description String @db.VarChar(500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employeeDeductions EmployeeDeduction[]
+}
+
+model MonthlyPayHead {
+  @@map("monthlypayhead")
+  id Int @id @default(autoincrement()) 
+  name String @unique
+  payType String
+  percentage Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bank {
+  @@map("bank")
+  id Int @id @default(autoincrement())
+  name String @unique
+  accountNumber String
+  bankAddress String @db.VarChar(550)
+  bankEmailAddress String @db.VarChar(255)
+  bankPhoneNo String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BasePay {
+  @@map("basePay")
+  id Int @id @default(autoincrement())
+  firstGrossPay BigInt @default(35000)
+  secondGrossPay BigInt
+  thirdGrossPay BigInt
+  fourthGrossPay BigInt
+}
+
+model SalaryGrade {
+  @@map("salaryGrade")
+  id Int @id @default(autoincrement())
+  name String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  salaryLevels SalaryLevel[]
+}
+
+model SalaryLevel {
+  @@map("salaryLevel")
+  id Int @id @default(autoincrement())
+  name String @unique
+  salaryGrade SalaryGrade @relation(fields: [salaryGradeId], references: [id], onDelete: Cascade)
+  salaryGradeId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  salarySteps SalaryStep[]
+  employee Employee?
+}
+
+model SalaryStep {
+   @@map("salaryStep")
+  id Int @id @default(autoincrement())
+  name String @unique
+  amount Int
+  salaryLevel SalaryLevel @relation(fields: [salaryLevelId], references: [id], onDelete: Cascade)
+  salaryLevelId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notches SalaryStepNotch[]
+  employee Employee?
+}
+
+model SalaryStepNotch {
+  @@map("salarystepnotch")
+  id Int @id @default(autoincrement())
+  name String
+  amount Int
+  salaryStep SalaryStep @relation(fields: [salaryStepId], references: [id], onDelete: Cascade)
+  salaryStepId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  employee Employee?
+}
+
+
+model Payslip {
+  @@map("payslip")
+  id Int @id @default(autoincrement())
+  employeeId Int
+  employee Employee @relation(fields: [employeeId], references: [id])
+  pension Int
+  paye Int
+  allowanceTotal Int
+  totalEarnings Int
+  deductionTotal Int
+  month String
+  year String
+  uWallet Int?
+  netPay Int
+  netSalary Int
+  isGenerated Boolean @default(true)
+  status Int
+  statusLevel String
+  isGeneratedToVoucher Boolean @default(false)
+  comment String
+  commentBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  voucher Voucher?
+}
+
+model Voucher {
+  @@map("voucher")
+  id Int @id @default(autoincrement())
+  paySlipId Int
+  paySlip Payslip @relation(fields: [paySlipId], references: [id])
+  amount Int
+  isGenerated Boolean @default(true)
+  remark String @default("Staff Salary")
+  month String
+  year String
+  status Int
+  statusLevel String
+  comment String
+  commentBy String
+  paymentType String
+  processDoneAsSchedule Boolean @default(false)
+  bankScheduleId Int
+  bankSchedule BankSchedule @relation(fields: [bankScheduleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BankSchedule {
+  @@map("bankschedule")
+  id Int @id @default(autoincrement())
+  BSID String
+  paymentMethod String
+  approvedBy String
+  paidBy String @default("Accountant")
+  ceoSignature String
+  theSumOf String
+  subTotal Int
+  month String
+  year String
+  bankName String
+  isApproved Boolean @default(false)
+  paymentType String
+  vouchers Voucher[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
