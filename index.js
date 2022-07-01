@@ -7,6 +7,8 @@ import monthlyPayHeadRoutes from "./routes/api/monthlyPayhead.js";
 import bankRoutes from "./routes/api/bank.js";
 import salaryGradeRoutes from "./routes/api/salaryGrade.js";
 import salaryLevelRoutes from "./routes/api/salaryLevel.js";
+import salaryStepRoutes from "./routes/api/salaryStep.js";
+import basePayRoutes from "./routes/api/basePay.js";
 import { error, notFound } from "./middlewares/error.js";
 import morgan from "morgan";
 // initialize a new express app
@@ -32,6 +34,8 @@ app.use("/api/monthlypayhead", monthlyPayHeadRoutes);
 app.use("/api/bank", bankRoutes);
 app.use("/api/salarygrade", salaryGradeRoutes);
 app.use("/api/salarylevel", salaryLevelRoutes);
+app.use("/api/salarystep", salaryStepRoutes);
+app.use("/api/basepay", basePayRoutes);
 
 app.use(notFound);
 app.use(error);

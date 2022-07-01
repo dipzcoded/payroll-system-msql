@@ -25,7 +25,7 @@ model User {
 model Employee {
   @@map("employee")
   id Int @id @default(autoincrement())
-  userId Int
+  userId Int @unique
   user User @relation(fields: [userId], references: [id])
   empId String @unique
   staffId String @unique
@@ -41,18 +41,18 @@ model Employee {
   joinDate DateTime
   employeeBank String
   employeeBankAcctnumber String
-  isCctive Boolean @default(true)
+  isActive Boolean @default(true)
   deductions EmployeeDeduction[]
   allowances EmployeeAllowance[]
   departmentId Int
   department Department @relation(fields: [departmentId], references: [id])
   positionId Int
   position Position @relation(fields: [positionId], references: [id])
-  salaryLevelId Int
+  salaryLevelId Int @unique
   salaryLevel SalaryLevel @relation(fields: [salaryLevelId], references: [id])
-  salaryStepId Int
+  salaryStepId Int @unique
   salaryStep SalaryStep @relation(fields: [salaryStepId], references: [id])
-  notchId Int
+  notchId Int @unique
   notch SalaryStepNotch @relation(fields: [notchId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -63,7 +63,7 @@ model EmployeeDeduction {
   @@map("employeededuction")
   id Int @id @default(autoincrement())
   feeType String
-  fee Int
+  fee Float @db.Double
   remark String @db.VarChar(255)
   employeeId Int
   employee Employee @relation(fields: [employeeId], references: [id])
@@ -77,7 +77,7 @@ model EmployeeAllowance {
   @@map("employeeallowance")
   id Int @id @default(autoincrement())
   feeType String
-  fee Int
+  fee Float @db.Double
   remark String @db.VarChar(255)
   employeeId Int
   employee Employee @relation(fields: [employeeId], references: [id])
@@ -155,10 +155,11 @@ model Bank {
 model BasePay {
   @@map("basePay")
   id Int @id @default(autoincrement())
-  firstGrossPay BigInt @default(35000)
-  secondGrossPay BigInt
-  thirdGrossPay BigInt
-  fourthGrossPay BigInt
+  firstGrossPay Float @db.Double @default(35000)
+  secondGrossPay Float @db.Double
+  thirdGrossPay Float @db.Double
+  fourthGrossPay Float @db.Double
+  cola Int
 }
 
 model SalaryGrade {
@@ -185,8 +186,8 @@ model SalaryLevel {
 model SalaryStep {
    @@map("salaryStep")
   id Int @id @default(autoincrement())
-  name String @unique
-  amount Int
+  name String 
+  amount Float @db.Double
   salaryLevel SalaryLevel @relation(fields: [salaryLevelId], references: [id], onDelete: Cascade)
   salaryLevelId Int
   createdAt DateTime @default(now())
@@ -199,7 +200,7 @@ model SalaryStepNotch {
   @@map("salarystepnotch")
   id Int @id @default(autoincrement())
   name String
-  amount Int
+  amount Float @db.Double
   salaryStep SalaryStep @relation(fields: [salaryStepId], references: [id], onDelete: Cascade)
   salaryStepId Int
   createdAt DateTime @default(now())
@@ -213,16 +214,16 @@ model Payslip {
   id Int @id @default(autoincrement())
   employeeId Int
   employee Employee @relation(fields: [employeeId], references: [id])
-  pension Int
-  paye Int
-  allowanceTotal Int
-  totalEarnings Int
-  deductionTotal Int
+  pension Float @db.Double
+  paye Float @db.Double
+  allowanceTotal Float @db.Double
+  totalEarnings Float @db.Double
+  deductionTotal Float @db.Double
   month String
   year String
-  uWallet Int?
-  netPay Int
-  netSalary Int
+  uWallet Float? @db.Double
+  netPay Float @db.Double
+  netSalary Float @db.Double
   isGenerated Boolean @default(true)
   status Int
   statusLevel String
@@ -237,9 +238,9 @@ model Payslip {
 model Voucher {
   @@map("voucher")
   id Int @id @default(autoincrement())
-  paySlipId Int
+  paySlipId Int @unique
   paySlip Payslip @relation(fields: [paySlipId], references: [id])
-  amount Int
+  amount Float @db.Double
   isGenerated Boolean @default(true)
   remark String @default("Staff Salary")
   month String
@@ -265,7 +266,7 @@ model BankSchedule {
   paidBy String @default("Accountant")
   ceoSignature String
   theSumOf String
-  subTotal Int
+  subTotal Float @db.Double
   month String
   year String
   bankName String
