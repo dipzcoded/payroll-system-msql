@@ -9,10 +9,17 @@ import salaryGradeRoutes from "./routes/api/salaryGrade.js";
 import salaryLevelRoutes from "./routes/api/salaryLevel.js";
 import salaryStepRoutes from "./routes/api/salaryStep.js";
 import basePayRoutes from "./routes/api/basePay.js";
+import authRoutes from "./routes/api/user.js";
 import { error, notFound } from "./middlewares/error.js";
 import morgan from "morgan";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 // initialize a new express app
 const app = express();
+
+// loading environment variables
+dotenv.config();
 
 // middlewares
 if (process.env.NODE_ENV === "development") {
@@ -25,7 +32,17 @@ app.use(
   })
 );
 
+// app.use(express.urlencoded({limit : "30mb"}))
+app.use(
+  cors({
+    origin: ["http://localhost:5000"],
+    credentials: true,
+  })
+);
+
+app.use(cookieParser());
 // routes
+app.use("/api/users", authRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/allowances", allowanceRoutes);

@@ -9,14 +9,15 @@ generator client {
 model User {
   @@map("user")
   id Int  @id @default(autoincrement())
+  name String
   email String @db.VarChar(255) @unique
   photo String @default("https://res.cloudinary.com/dbrlwhrg6/image/upload/v1629941837/eventify/user_zg5yhl.png")
-  signaturePhoto String
+  signaturePhoto String?
   password String
   role String @default("Employee")
-  passwordChangedAt DateTime
-  passwordResetToken String @db.VarChar(255)
-  passwordResetExpires DateTime
+  passwordChangedAt DateTime?
+  passwordResetToken String? @db.VarChar(255)
+  passwordResetExpires BigInt?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   employee Employee?
