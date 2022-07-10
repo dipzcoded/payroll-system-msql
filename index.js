@@ -10,6 +10,9 @@ import salaryLevelRoutes from "./routes/api/salaryLevel.js";
 import salaryStepRoutes from "./routes/api/salaryStep.js";
 import basePayRoutes from "./routes/api/basePay.js";
 import authRoutes from "./routes/api/user.js";
+import employeeRoutes from "./routes/api/employee.js";
+import paySlipRoutes from "./routes/api/payslip.js";
+import voucherRoutes from "./routes/api/voucher.js";
 import { error, notFound } from "./middlewares/error.js";
 import morgan from "morgan";
 import cors from "cors";
@@ -43,6 +46,7 @@ app.use(
 app.use(cookieParser());
 // routes
 app.use("/api/users", authRoutes);
+app.use("/api/employees", employeeRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/allowances", allowanceRoutes);
@@ -53,6 +57,8 @@ app.use("/api/salarygrade", salaryGradeRoutes);
 app.use("/api/salarylevel", salaryLevelRoutes);
 app.use("/api/salarystep", salaryStepRoutes);
 app.use("/api/basepay", basePayRoutes);
+app.use("/api/payslip", paySlipRoutes);
+app.use("/api/vouchers", voucherRoutes);
 
 app.use(notFound);
 app.use(error);

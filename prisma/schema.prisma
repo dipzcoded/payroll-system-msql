@@ -28,33 +28,33 @@ model Employee {
   id Int @id @default(autoincrement())
   userId Int @unique
   user User @relation(fields: [userId], references: [id])
-  empId String @unique
+  EMPID String @unique
   staffId String @unique
-  gender String
-  nationality String
-  address String
-  dob DateTime
-  mobile String
-  city String
-  state String
+  gender String?
+  nationality String?
+  address String?
+  dob DateTime?
+  mobile String?
+  city String?
+  state String?
   contractSalary Int?
-  employeeType String
-  joinDate DateTime
-  employeeBank String
-  employeeBankAcctnumber String
+  employeeType String?
+  joinDate DateTime?
+  employeeBank String?
+  employeeBankAcctNumber String?
   isActive Boolean @default(true)
   deductions EmployeeDeduction[]
   allowances EmployeeAllowance[]
-  departmentId Int
-  department Department @relation(fields: [departmentId], references: [id])
-  positionId Int
-  position Position @relation(fields: [positionId], references: [id])
-  salaryLevelId Int @unique
-  salaryLevel SalaryLevel @relation(fields: [salaryLevelId], references: [id])
-  salaryStepId Int @unique
-  salaryStep SalaryStep @relation(fields: [salaryStepId], references: [id])
-  notchId Int @unique
-  notch SalaryStepNotch @relation(fields: [notchId], references: [id])
+  departmentId Int?
+  department Department? @relation(fields: [departmentId], references: [id])
+  positionId Int?
+  position Position? @relation(fields: [positionId], references: [id])
+  salaryLevelId Int? @unique
+  salaryLevel SalaryLevel? @relation(fields: [salaryLevelId], references: [id])
+  salaryStepId Int? @unique
+  salaryStep SalaryStep? @relation(fields: [salaryStepId], references: [id])
+  notchId Int? @unique
+  notch SalaryStepNotch? @relation(fields: [notchId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   payslips Payslip[]
@@ -69,7 +69,7 @@ model EmployeeDeduction {
   employeeId Int
   employee Employee @relation(fields: [employeeId], references: [id])
   deductionId Int
-  deduction Deduction @relation(fields: [deductionId], references: [id])
+  deduction Deduction @relation(fields: [deductionId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -83,7 +83,7 @@ model EmployeeAllowance {
   employeeId Int
   employee Employee @relation(fields: [employeeId], references: [id])
   allowanceId Int
-  allowance Allowance @relation(fields: [allowanceId], references: [id])
+  allowance Allowance @relation(fields: [allowanceId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -217,6 +217,8 @@ model Payslip {
   employee Employee @relation(fields: [employeeId], references: [id])
   pension Float @db.Double
   paye Float @db.Double
+  empAllowanceIds String
+  empDeductionIds String
   allowanceTotal Float @db.Double
   totalEarnings Float @db.Double
   deductionTotal Float @db.Double
@@ -226,21 +228,21 @@ model Payslip {
   netPay Float @db.Double
   netSalary Float @db.Double
   isGenerated Boolean @default(true)
-  status Int
-  statusLevel String
+  status Int?
+  statusLevel String?
   isGeneratedToVoucher Boolean @default(false)
-  comment String
-  commentBy String
+  comment String?
+  commentBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  voucher Voucher?
+  vouchers Voucher[]
 }
 
 model Voucher {
   @@map("voucher")
   id Int @id @default(autoincrement())
-  paySlipId Int @unique
-  paySlip Payslip @relation(fields: [paySlipId], references: [id])
+  paySlipId Int
+  paySlip Payslip @relation(fields: [paySlipId], references: [id], onDelete: Cascade)
   amount Float @db.Double
   isGenerated Boolean @default(true)
   remark String @default("Staff Salary")
@@ -248,12 +250,11 @@ model Voucher {
   year String
   status Int
   statusLevel String
-  comment String
-  commentBy String
+  comment String?
+  commentBy String?
   paymentType String
   processDoneAsSchedule Boolean @default(false)
-  bankScheduleId Int
-  bankSchedule BankSchedule @relation(fields: [bankScheduleId], references: [id])
+  bankScheduleId Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -273,7 +274,6 @@ model BankSchedule {
   bankName String
   isApproved Boolean @default(false)
   paymentType String
-  vouchers Voucher[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
