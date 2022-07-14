@@ -113,6 +113,31 @@ export const getAllEmployeesV2 = expressAsyncHandler(async (req, res) => {
     where: {
       isActive: true,
     },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          createdAt: true,
+          updatedAt: true,
+          photo: true,
+          id: true,
+        },
+      },
+      department: true,
+      position: {
+        include: {
+          department: true,
+        },
+      },
+      salaryLevel: true,
+      salaryStep: {
+        include: {
+          salaryLevel: true,
+        },
+      },
+      notch: true,
+    },
   });
 
   // sorting payslips by month from the query

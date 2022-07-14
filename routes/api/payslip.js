@@ -44,7 +44,7 @@ router
   .get(restrictAccessRoute("CEO", "Accountant"), getApprovedSalaryslips);
 router
   .route("/rejected")
-  .get(restrictAccessRoute("HR"), getRejectedSalaryslips);
+  .get(restrictAccessRoute("HR", "Internal Auditor"), getRejectedSalaryslips);
 router
   .route("/reject/notapproved")
   .patch(restrictAccessRoute("Internal Auditor"), rejectNotApprovedSalaryslips);

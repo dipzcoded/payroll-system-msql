@@ -264,9 +264,9 @@ model BankSchedule {
   id Int @id @default(autoincrement())
   BSID String
   paymentMethod String
-  approvedBy String
+  approvedBy String?
   paidBy String @default("Accountant")
-  ceoSignature String
+  ceoSignature String?
   theSumOf String
   subTotal Float @db.Double
   month String

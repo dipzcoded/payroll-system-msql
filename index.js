@@ -13,6 +13,7 @@ import authRoutes from "./routes/api/user.js";
 import employeeRoutes from "./routes/api/employee.js";
 import paySlipRoutes from "./routes/api/payslip.js";
 import voucherRoutes from "./routes/api/voucher.js";
+import bankScheduleRoutes from "./routes/api/bankschedule.js";
 import { error, notFound } from "./middlewares/error.js";
 import morgan from "morgan";
 import cors from "cors";
@@ -59,6 +60,7 @@ app.use("/api/salarystep", salaryStepRoutes);
 app.use("/api/basepay", basePayRoutes);
 app.use("/api/payslip", paySlipRoutes);
 app.use("/api/vouchers", voucherRoutes);
+app.use("/api/bankschedule", bankScheduleRoutes);
 
 app.use(notFound);
 app.use(error);

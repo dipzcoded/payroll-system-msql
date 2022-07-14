@@ -9,12 +9,12 @@ import {
   getApprovedBankVouchers,
   getNotApprovedBankVouchers,
   getPreApprovedBankVouchers,
-  //   getRejectedBankVouchers,
-  //   rejectNotApprovedBankVouchers,
-  //   rejectPreApprovedBankVouchers,
-  //   deleteBankVoucherById,
-  //   deleteBulkBankVouchers,
-  //   getCreatedAsScheduleVouchers,
+  getRejectedBankVouchers,
+  rejectNotApprovedBankVouchers,
+  rejectPreApprovedBankVouchers,
+  deleteBankVoucherById,
+  deleteBulkBankVouchers,
+  getCreatedAsScheduleVouchers,
 } from "../../controllers/voucher.js";
 
 router.use(auth);
@@ -28,22 +28,22 @@ router
 router
   .route("/approved")
   .get(restrictAccessRoute("Accountant"), getApprovedBankVouchers);
-// router
-//   .route("/delete-bulk")
-//   .patch(restrictAccessRoute("Accountant"), deleteBulkBankVouchers);
-// router
-//   .route("/rejected")
-//   .get(
-//     restrictAccessRoute("Accountant", "Internal Auditor"),
-//     getRejectedBankVouchers
-//   );
+router
+  .route("/delete-bulk")
+  .patch(restrictAccessRoute("Accountant"), deleteBulkBankVouchers);
+router
+  .route("/rejected")
+  .get(
+    restrictAccessRoute("Accountant", "Internal Auditor"),
+    getRejectedBankVouchers
+  );
 
-// router
-//   .route("/approved-asschedule")
-//   .get(
-//     restrictAccessRoute("Accountant", "CEO", "HR", "Internal Auditor"),
-//     getCreatedAsScheduleVouchers
-//   );
+router
+  .route("/approved-asschedule")
+  .get(
+    restrictAccessRoute("Accountant", "CEO", "HR", "Internal Auditor"),
+    getCreatedAsScheduleVouchers
+  );
 
 router
   .route("/create/notapproved")
@@ -60,17 +60,17 @@ router
 router
   .route("/create/approved")
   .patch(restrictAccessRoute("CEO"), createApprovedBankVouchers);
-// router
-//   .route("/reject/notapproved")
-//   .patch(
-//     restrictAccessRoute("Internal Auditor"),
-//     rejectNotApprovedBankVouchers
-//   );
-// router
-//   .route("/reject/preapproved")
-//   .patch(restrictAccessRoute("CEO"), rejectPreApprovedBankVouchers);
-// router
-//   .route("/:id")
-//   .delete(restrictAccessRoute("Accountant"), deleteBankVoucherById);
+router
+  .route("/reject/notapproved")
+  .patch(
+    restrictAccessRoute("Internal Auditor"),
+    rejectNotApprovedBankVouchers
+  );
+router
+  .route("/reject/preapproved")
+  .patch(restrictAccessRoute("CEO"), rejectPreApprovedBankVouchers);
+router
+  .route("/:id")
+  .delete(restrictAccessRoute("Accountant"), deleteBankVoucherById);
 
 export default router;

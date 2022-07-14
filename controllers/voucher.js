@@ -132,6 +132,25 @@ export const getApprovedBankVouchers = expressAsyncHandler(async (req, res) => {
   });
 });
 
+export const getCreatedAsScheduleVouchers = expressAsyncHandler(
+  async (req, res) => {
+    let approvedVouchersAsSchedule;
+
+    const currentYear = String(new Date().getFullYear());
+
+    approvedVouchersAsSchedule = await voucherModel.findMany({
+      where: {
+        year: currentYear,
+        status: 3,
+        statusLevel: "approved",
+        processDoneAsSchedule: true,
+      },
+    });
+
+    res.json({ status: "success", approvedVouchersAsSchedule });
+  }
+);
+
 export const getRejectedBankVouchers = expressAsyncHandler(async (req, res) => {
   const { month, statusLevel } = req.query;
   const currentYear = String(new Date().getFullYear());
@@ -450,7 +469,7 @@ export const rejectPreApprovedBankVouchers = expressAsyncHandler(
         const bankVoucher = bankVouchersArr[i];
         const voucherCreated = await voucherModel.findUnique({
           where: {
-            id: Number(),
+            id: Number(bankVoucher.voucher),
           },
         });
         if (
@@ -489,3 +508,102 @@ export const rejectPreApprovedBankVouchers = expressAsyncHandler(
     }
   }
 );
+
+export const deleteBankVoucherById = expressAsyncHandler(async (req, res) => {
+  const { id: voucherId } = req.params;
+
+  if (voucherId) {
+    const voucher = await voucherModel.findUnique({
+      where: {
+        id: Number(voucherId),
+      },
+    });
+
+    const paySlip = await paySlipModel.findUnique({
+      where: {
+        id: voucher.paySlipId,
+      },
+    });
+
+    if (paySlip) {
+      await paySlipModel.delete({
+        where: {
+          id: paySlip.id,
+        },
+      });
+      return res.json({
+        status: "success",
+        message: "deleted succesfully!",
+      });
+    } else {
+      res.status(404);
+      throw new Error(`payslip is not found`);
+    }
+
+    // if (voucher) {
+    //   await voucherModel.findByIdAndDelete(voucher._id);
+    //   return res.json({
+    //     status: "success",
+    //     message: "deleted succesfully!",
+    //   });
+    // } else {
+    //   res.status(404);
+    //   throw new Error(`voucher not found!`);
+    // }
+  } else {
+    res.status(400);
+    throw new Error(`Invalid voucher id`);
+  }
+});
+
+export const deleteBulkBankVouchers = expressAsyncHandler(async (req, res) => {
+  const { bankVoucherArrIds } = req.body;
+
+  try {
+    for (let i = 0; i < bankVoucherArrIds.length; i++) {
+      const voucherId = bankVoucherArrIds[i];
+      const voucher = await voucherModel.findUnique({
+        where: {
+          id: Number(voucherId),
+        },
+      });
+
+      if (voucher) {
+        const salarySlip = await paySlipModel.findUnique({
+          where: {
+            id: voucher.paySlipId,
+          },
+        });
+
+        if (salarySlip) {
+          await paySlipModel.delete({
+            where: {
+              id: salarySlip.id,
+            },
+          });
+        } else {
+          res.status(404);
+          throw new Error(`payslip is not found`);
+        }
+      }
+
+      // if (voucher) {
+      //   await voucherModel.findByIdAndDelete(voucher._id);
+      // } else {
+      //   res.status(404);
+      //   throw new Error(`voucher not found`);
+      // }
+    }
+    res.json({
+      status: "success",
+      message: "deleted bulk bank vouchers successfully",
+    });
+  } catch (error) {
+    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    res.status(statusCode);
+    return res.json({
+      status: "fail",
+      detail: error.message,
+    });
+  }
+});
