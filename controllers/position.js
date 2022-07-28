@@ -1,8 +1,13 @@
 import prisma from "@prisma/client";
 import expressAsyncHandler from "express-async-handler";
 
-const { position: positionModel, department: departmentModel } =
-  new prisma.PrismaClient();
+const {
+  position: positionModel,
+  department: departmentModel,
+  employee: employeeModel,
+  payslip: paySlipModel,
+  voucher: voucherModel,
+} = new prisma.PrismaClient();
 
 export const getAllPosition = expressAsyncHandler(async (req, res) => {
   const positions = await positionModel.findMany({
@@ -132,7 +137,59 @@ export const deletePositionById = expressAsyncHandler(async (req, res) => {
     const position = await positionModel.findUnique({
       where: { id: Number(positionId) },
     });
-    if (position) {
+    if (position && position.isActive) {
+      const positionEmployees = await employeeModel.findMany({
+        where: {
+          positionId: position.id,
+        },
+      });
+
+      if (positionEmployees.length) {
+        for (let i = 0; i < positionEmployees.length; i++) {
+          const positionEmployee = positionEmployees[i];
+          const employeePayslips = await paySlipModel.findMany({
+            where: {
+              employeeId: positionEmployee.id,
+            },
+          });
+          if (employeePayslips.length) {
+            for (let i = 0; i < employeePayslips.length; i++) {
+              const currentPayslip = employeePayslips[i];
+              const voucherPayslips = await voucherModel.findMany({
+                where: { paySlipId: currentPayslip.id },
+              });
+              if (voucherPayslips.length) {
+                await voucherModel.updateMany({
+                  where: {
+                    paySlipId: currentPayslip.id,
+                  },
+                  data: {
+                    isActive: false,
+                  },
+                });
+              }
+              await paySlipModel.update({
+                where: {
+                  id: currentPayslip.id,
+                },
+                data: {
+                  isActive: false,
+                },
+              });
+            }
+          }
+
+          await employeeModel.update({
+            where: {
+              id: positionEmployee.id,
+            },
+            data: {
+              isActive: false,
+            },
+          });
+        }
+      }
+
       await positionModel.update({
         where: {
           id: Number(positionId),
@@ -148,7 +205,9 @@ export const deletePositionById = expressAsyncHandler(async (req, res) => {
       });
     } else {
       res.status(404);
-      throw new Error("position not found");
+      throw new Error(
+        "position not found or is already inactive from the system"
+      );
     }
   } else {
     res.status(400);

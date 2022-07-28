@@ -10,7 +10,7 @@ import {
   deleteEmployeeV2,
   getEmployeeByIdV2,
   getEmployeeByUserId,
-  //   deleteBulkEmployeeByIdsV2,
+  deleteBulkEmployeeByIdsV2,
   //   createBulkEmployeeV2,
   getAllEmployeesV2,
   employeeTopUp,
@@ -37,9 +37,9 @@ router
 //   .route("/create-bulk/contract")
 //   .patch(restrictAccessRoute("HR"), createBulkContractEmployeeV3);
 
-// router
-//   .route("/delete-bulk")
-//   .patch(restrictAccessRoute("HR"), deleteBulkEmployeeByIdsV2);
+router
+  .route("/delete-bulk")
+  .patch(restrictAccessRoute("HR"), deleteBulkEmployeeByIdsV2);
 router
   .route("/:id")
   .get(restrictAccessRoute("HR"), getEmployeeByIdV2)

@@ -3,7 +3,12 @@ import prisma from "@prisma/client";
 
 const { PrismaClient } = prisma;
 
-const { department: departmentModel } = new PrismaClient();
+const {
+  department: departmentModel,
+  employee: employeeModel,
+  payslip: paySlipModel,
+  voucher: voucherModel,
+} = new PrismaClient();
 
 export const getAllDeparments = expressAsyncHandler(async (req, res) => {
   const departments = await departmentModel.findMany({
@@ -100,6 +105,58 @@ export const deleteDepartmentById = expressAsyncHandler(async (req, res) => {
     });
 
     if (department) {
+      const departmentEmployees = await employeeModel.findMany({
+        where: {
+          departmentId: department.id,
+        },
+      });
+
+      if (departmentEmployees.length) {
+        for (let i = 0; i < departmentEmployees.length; i++) {
+          const departmentEmployee = departmentEmployees[i];
+          const employeePayslips = await paySlipModel.findMany({
+            where: {
+              employeeId: departmentEmployee.id,
+            },
+          });
+          if (employeePayslips.length) {
+            for (let i = 0; i < employeePayslips.length; i++) {
+              const currentPayslip = employeePayslips[i];
+              const voucherPayslips = await voucherModel.findMany({
+                where: { paySlipId: currentPayslip.id },
+              });
+              if (voucherPayslips.length) {
+                await voucherModel.updateMany({
+                  where: {
+                    paySlipId: currentPayslip.id,
+                  },
+                  data: {
+                    isActive: false,
+                  },
+                });
+              }
+              await paySlipModel.update({
+                where: {
+                  id: currentPayslip.id,
+                },
+                data: {
+                  isActive: false,
+                },
+              });
+            }
+          }
+
+          await employeeModel.update({
+            where: {
+              id: departmentEmployee.id,
+            },
+            data: {
+              isActive: false,
+            },
+          });
+        }
+      }
+
       await departmentModel.update({
         where: {
           id: Number(departmentId),

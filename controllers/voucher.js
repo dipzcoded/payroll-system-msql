@@ -16,6 +16,7 @@ export const getNotApprovedBankVouchers = expressAsyncHandler(
         status: 0,
         statusLevel: "not approved",
         processDoneAsSchedule: false,
+        isActive: true,
       },
       include: {
         paySlip: {
@@ -47,13 +48,7 @@ export const getPreApprovedBankVouchers = expressAsyncHandler(
   async (req, res) => {
     const { month } = req.query;
     const currentYear = String(new Date().getFullYear());
-    // const preapprovedBankVouchers = await voucherModel.find({
-    //   month,
-    //   year: currentYear,
-    //   status: { $eq: 1 },
-    //   statusLevel: "pre approved",
-    //   processDoneAsSchedule: { $eq: false },
-    // });
+
     const preapprovedBankVouchers = await voucherModel.findMany({
       where: {
         month,
@@ -61,6 +56,7 @@ export const getPreApprovedBankVouchers = expressAsyncHandler(
         status: 1,
         statusLevel: "pre approved",
         processDoneAsSchedule: false,
+        isActive: true,
       },
       include: {
         paySlip: {
@@ -92,40 +88,64 @@ export const getApprovedBankVouchers = expressAsyncHandler(async (req, res) => {
   let approvedBankVouchers;
   const { month } = req.query;
   const currentYear = String(new Date().getFullYear());
-  // approvedBankVouchers = await voucherModel.find({
-  //   month,
-  //   year: currentYear,
-  //   status: { $eq: 3 },
-  //   statusLevel: "approved",
-  //   processDoneAsSchedule: { $eq: false },
-  // });
-  approvedBankVouchers = await voucherModel.findMany({
-    where: {
-      month,
-      year: currentYear,
-      status: 3,
-      statusLevel: "approved",
-      processDoneAsSchedule: false,
-    },
-    include: {
-      paySlip: {
-        include: {
-          employee: {
-            include: {
-              user: {
-                select: {
-                  email: true,
-                  name: true,
-                  photo: true,
-                  id: true,
+
+  approvedBankVouchers =
+    req.user.role === "Accountant"
+      ? await voucherModel.findMany({
+          where: {
+            month,
+            year: currentYear,
+            status: 3,
+            statusLevel: "approved",
+            processDoneAsSchedule: false,
+            isActive: true,
+          },
+          include: {
+            paySlip: {
+              include: {
+                employee: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true,
+                        name: true,
+                        photo: true,
+                        id: true,
+                      },
+                    },
+                  },
                 },
               },
             },
           },
-        },
-      },
-    },
-  });
+        })
+      : await voucherModel.findMany({
+          where: {
+            month,
+            year: currentYear,
+            status: 3,
+            statusLevel: "approved",
+            isActive: true,
+          },
+          include: {
+            paySlip: {
+              include: {
+                employee: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true,
+                        name: true,
+                        photo: true,
+                        id: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
   res.json({
     status: "success",
     approved: approvedBankVouchers,
@@ -144,6 +164,7 @@ export const getCreatedAsScheduleVouchers = expressAsyncHandler(
         status: 3,
         statusLevel: "approved",
         processDoneAsSchedule: true,
+        isActive: true,
       },
     });
 
@@ -165,6 +186,7 @@ export const getRejectedBankVouchers = expressAsyncHandler(async (req, res) => {
             in: statusLevel.split(","),
           },
       processDoneAsSchedule: false,
+      isActive: true,
     },
     include: {
       paySlip: {
@@ -210,7 +232,8 @@ export const createBankVouchersFromApprovedSalaryslips = expressAsyncHandler(
           salaryslip &&
           salaryslip.status === 3 &&
           salaryslip.statusLevel === "approved" &&
-          !salaryslip.isGeneratedToVoucher
+          !salaryslip.isGeneratedToVoucher &&
+          salaryslip.isActive
         ) {
           const voucherCreatedSlip = await voucherModel.findMany({
             where: {
@@ -310,7 +333,8 @@ export const createPreApprovedBankVouchers = expressAsyncHandler(
           if (
             voucherCreated.status === 0 &&
             voucherCreated.statusLevel === "not approved" &&
-            voucherCreated.isGenerated
+            voucherCreated.isGenerated &&
+            voucherCreated.isActive
           ) {
             // voucherCreated.status = 1;
             // voucherCreated.statusLevel = "pre approved";
@@ -370,7 +394,8 @@ export const createApprovedBankVouchers = expressAsyncHandler(
           if (
             voucherCreated.status === 1 &&
             voucherCreated.statusLevel === "pre approved" &&
-            voucherCreated.isGenerated
+            voucherCreated.isGenerated &&
+            voucherCreated.isActive
           ) {
             await voucherModel.update({
               where: {
@@ -425,7 +450,8 @@ export const rejectNotApprovedBankVouchers = expressAsyncHandler(
         if (
           voucherCreated &&
           voucherCreated.statusLevel === "not approved" &&
-          voucherCreated.status === 0
+          voucherCreated.status === 0 &&
+          voucherCreated.isActive
         ) {
           await voucherModel.update({
             where: {
@@ -475,7 +501,8 @@ export const rejectPreApprovedBankVouchers = expressAsyncHandler(
         if (
           voucherCreated &&
           voucherCreated.statusLevel === "pre approved" &&
-          voucherCreated.status === 1
+          voucherCreated.status === 1 &&
+          voucherCreated.isActive
         ) {
           await voucherModel.update({
             where: {
@@ -539,17 +566,6 @@ export const deleteBankVoucherById = expressAsyncHandler(async (req, res) => {
       res.status(404);
       throw new Error(`payslip is not found`);
     }
-
-    // if (voucher) {
-    //   await voucherModel.findByIdAndDelete(voucher._id);
-    //   return res.json({
-    //     status: "success",
-    //     message: "deleted succesfully!",
-    //   });
-    // } else {
-    //   res.status(404);
-    //   throw new Error(`voucher not found!`);
-    // }
   } else {
     res.status(400);
     throw new Error(`Invalid voucher id`);
@@ -586,13 +602,6 @@ export const deleteBulkBankVouchers = expressAsyncHandler(async (req, res) => {
           throw new Error(`payslip is not found`);
         }
       }
-
-      // if (voucher) {
-      //   await voucherModel.findByIdAndDelete(voucher._id);
-      // } else {
-      //   res.status(404);
-      //   throw new Error(`voucher not found`);
-      // }
     }
     res.json({
       status: "success",

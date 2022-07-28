@@ -9,6 +9,7 @@ const {
   employeeAllowance: employeeAllowanceModel,
   employeeDeduction: employeeDeductionModel,
   payslip: paySlipModel,
+  voucher: voucherModel,
 } = new prisma.PrismaClient();
 
 // get all employees
@@ -512,6 +513,39 @@ export const deleteEmployeeV2 = expressAsyncHandler(async (req, res) => {
 
     // checking if employee corresponds with the user to prevent error
     if (employee && employee.user.id === user.id) {
+      const employeePayslips = await paySlipModel.findMany({
+        where: {
+          employeeId: employee.id,
+        },
+      });
+
+      if (employeePayslips.length) {
+        for (let i = 0; i < employeePayslips.length; i++) {
+          const currentPayslip = employeePayslips[i];
+          const voucherPayslips = await voucherModel.findMany({
+            where: { paySlipId: currentPayslip.id },
+          });
+          if (voucherPayslips.length) {
+            await voucherModel.updateMany({
+              where: {
+                paySlipId: currentPayslip.id,
+              },
+              data: {
+                isActive: false,
+              },
+            });
+          }
+          await paySlipModel.update({
+            where: {
+              id: currentPayslip.id,
+            },
+            data: {
+              isActive: false,
+            },
+          });
+        }
+      }
+
       // updating the employee active state to false
       await employeeModel.update({
         where: {
@@ -538,6 +572,94 @@ export const deleteEmployeeV2 = expressAsyncHandler(async (req, res) => {
     throw new Error("invalid employee id");
   }
 });
+
+export const deleteBulkEmployeeByIdsV2 = expressAsyncHandler(
+  async (req, res) => {
+    // params
+    const { employeeArrIds } = req.body;
+
+    // checking the length of passed data is greater than 1
+    if (employeeArrIds?.length > 1) {
+      try {
+        // looping the data to delete employees,users,and payslips
+        for (let i = 0; i < employeeArrIds.length; i++) {
+          const employee = await employeeModel.findUnique({
+            where: {
+              id: Number(employeeArrIds[i]),
+            },
+            include: {
+              user: true,
+            },
+          });
+
+          // checking if the user correspond with the employee user
+          if (employee) {
+            const employeePayslips = await paySlipModel.findMany({
+              where: {
+                employeeId: employee.id,
+              },
+            });
+
+            if (employeePayslips.length) {
+              for (let i = 0; i < employeePayslips.length; i++) {
+                const currentPayslip = employeePayslips[i];
+                const voucherPayslips = await voucherModel.findMany({
+                  where: { paySlipId: currentPayslip.id },
+                });
+                if (voucherPayslips.length) {
+                  await voucherModel.updateMany({
+                    where: {
+                      paySlipId: currentPayslip.id,
+                    },
+                    data: {
+                      isActive: false,
+                    },
+                  });
+                }
+                await paySlipModel.update({
+                  where: {
+                    id: currentPayslip.id,
+                  },
+                  data: {
+                    isActive: false,
+                  },
+                });
+              }
+            }
+
+            // update employee active state to false
+            await employeeModel.update({
+              where: {
+                id: employee.id,
+              },
+              data: {
+                isActive: false,
+              },
+            });
+          } else {
+            throw new Error("employee not found");
+          }
+        }
+        // returning response
+        return res.json({
+          status: "success",
+          detail: "deleted bulk employee successfully",
+        });
+      } catch (error) {
+        res.status(400);
+        return res.json({
+          status: "fail",
+          detail: error.message,
+        });
+      }
+    } else {
+      res.status(400);
+      throw new Error(
+        `This func is meant for bulk employee id that the length of the array is greater than 1`
+      );
+    }
+  }
+);
 
 // remove allowance to an employee
 export const employeeAllowanceRemove = expressAsyncHandler(async (req, res) => {

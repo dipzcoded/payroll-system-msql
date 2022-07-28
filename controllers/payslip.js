@@ -19,6 +19,7 @@ export const getGeneratedPaySlips = expressAsyncHandler(async (req, res) => {
           year,
           status: null,
           statusLevel: null,
+          isActive: true,
         },
         include: {
           employee: {
@@ -44,6 +45,7 @@ export const getGeneratedPaySlips = expressAsyncHandler(async (req, res) => {
           year,
           status: null,
           statusLevel: null,
+          isActive: true,
         },
         include: {
           employee: {
@@ -380,6 +382,7 @@ export const getNotApprovedSalaryslips = expressAsyncHandler(
         statusLevel: "not approved",
         isGeneratedToVoucher: false,
         isGenerated: true,
+        isActive: true,
       },
       include: {
         employee: {
@@ -422,6 +425,7 @@ export const getPreAprrovedSalaryslips = expressAsyncHandler(
         statusLevel: "pre approved",
         isGeneratedToVoucher: false,
         isGenerated: true,
+        isActive: true,
       },
       include: {
         employee: {
@@ -454,32 +458,59 @@ export const getApprovedSalaryslips = expressAsyncHandler(async (req, res) => {
   let approvedSalaryslips;
   const { month } = req.query;
   const currentYear = String(new Date().getFullYear());
-  approvedSalaryslips = await paySlipModel.findMany({
-    where: {
-      month,
-      year: currentYear,
-      status: {
-        equals: 3,
-      },
-      statusLevel: "approved",
-      isGeneratedToVoucher: false,
-      isGenerated: true,
-    },
-    include: {
-      employee: {
-        include: {
-          user: {
-            select: {
-              email: true,
-              name: true,
-              photo: true,
-              id: true,
+  approvedSalaryslips =
+    req.user.role === "Accountant"
+      ? await paySlipModel.findMany({
+          where: {
+            month,
+            year: currentYear,
+            status: {
+              equals: 3,
+            },
+            statusLevel: "approved",
+            isGeneratedToVoucher: false,
+            isActive: true,
+          },
+          include: {
+            employee: {
+              include: {
+                user: {
+                  select: {
+                    email: true,
+                    name: true,
+                    photo: true,
+                    id: true,
+                  },
+                },
+              },
             },
           },
-        },
-      },
-    },
-  });
+        })
+      : await paySlipModel.findMany({
+          where: {
+            month,
+            year: currentYear,
+            status: {
+              equals: 3,
+            },
+            statusLevel: "approved",
+            isActive: true,
+          },
+          include: {
+            employee: {
+              include: {
+                user: {
+                  select: {
+                    email: true,
+                    name: true,
+                    photo: true,
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        });
 
   approvedSalaryslips = await populatePayslipAllowancesAndDeductions(
     approvedSalaryslips
@@ -505,6 +536,7 @@ export const getRejectedSalaryslips = expressAsyncHandler(async (req, res) => {
             in: statusLevel.split(","),
           },
       isGeneratedToVoucher: false,
+      isActive: true,
     },
     include: {
       employee: {
@@ -521,15 +553,7 @@ export const getRejectedSalaryslips = expressAsyncHandler(async (req, res) => {
       },
     },
   });
-  // const rejectedSalaryslips = await paySlipModel.find({
-  //   month,
-  //   year: currentYear,
-  //   status: { $eq: 2 },
-  //   statusLevel: !statusLevel.includes(",")
-  //     ? statusLevel
-  //     : { $in: statusLevel.split(",") },
-  //   isGeneratedToVouchers: { $eq: false },
-  // });
+
   res.json({
     status: "success",
     rejectedPaySlips: rejectedSalaryslips,
@@ -552,7 +576,8 @@ export const rejectNotApprovedSalaryslips = expressAsyncHandler(
         if (salarySlip) {
           if (
             salarySlip.status === 0 &&
-            salarySlip.statusLevel === "not approved"
+            salarySlip.statusLevel === "not approved" &&
+            salarySlip.isActive
           ) {
             await paySlipModel.update({
               where: {
@@ -605,7 +630,8 @@ export const rejectPreApprovedSalaryslips = expressAsyncHandler(
         if (salarySlip) {
           if (
             salarySlip.status === 1 &&
-            salarySlip.statusLevel === "pre approved"
+            salarySlip.statusLevel === "pre approved" &&
+            salarySlip.isActive
           ) {
             await paySlipModel.update({
               where: {
@@ -659,7 +685,8 @@ export const rejectBulkSalaryslips = expressAsyncHandler(async (req, res) => {
       if (salarySlip) {
         if (
           (salarySlip.status === 0 || salarySlip.status === 1) &&
-          salarySlip.statusLevel
+          salarySlip.statusLevel &&
+          salarySlip.isActive
         ) {
           await paySlipModel.update({
             where: {
@@ -742,7 +769,7 @@ export const createNotApprovedSalaryslip = expressAsyncHandler(
           },
         });
         if (salarySlip) {
-          if (salarySlip.isGenerated) {
+          if (salarySlip.isGenerated && salarySlip.isActive) {
             await paySlipModel.update({
               where: {
                 id: salarySlip.id,
@@ -791,7 +818,8 @@ export const createPreApprovedSalaryslip = expressAsyncHandler(
         if (salarySlip) {
           if (
             salarySlip.status === 0 &&
-            salarySlip.statusLevel === "not approved"
+            salarySlip.statusLevel === "not approved" &&
+            salarySlip.isActive
           ) {
             await paySlipModel.update({
               where: {
@@ -841,7 +869,8 @@ export const createApprovedSalaryslip = expressAsyncHandler(
         if (salarySlip) {
           if (
             salarySlip.status === 1 &&
-            salarySlip.statusLevel === "pre approved"
+            salarySlip.statusLevel === "pre approved" &&
+            salarySlip.isActive
           ) {
             // salarySlip.status = 3;
             // salarySlip.statusLevel = "approved";

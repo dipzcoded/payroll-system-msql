@@ -27,7 +27,7 @@ router
   .get(restrictAccessRoute("CEO"), getPreApprovedBankVouchers);
 router
   .route("/approved")
-  .get(restrictAccessRoute("Accountant"), getApprovedBankVouchers);
+  .get(restrictAccessRoute("CEO", "Accountant"), getApprovedBankVouchers);
 router
   .route("/delete-bulk")
   .patch(restrictAccessRoute("Accountant"), deleteBulkBankVouchers);

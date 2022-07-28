@@ -231,6 +231,7 @@ model Payslip {
   status Int?
   statusLevel String?
   isGeneratedToVoucher Boolean @default(false)
+  isActive Boolean @default(true)
   comment String?
   commentBy String?
   createdAt DateTime @default(now())
@@ -253,6 +254,7 @@ model Voucher {
   comment String?
   commentBy String?
   paymentType String
+  isActive Boolean @default(true)
   processDoneAsSchedule Boolean @default(false)
   bankScheduleId Int?
   createdAt DateTime @default(now())
