@@ -113,6 +113,8 @@ export const getLoginUser = expressAsyncHandler(async (req, res) => {
       id: req.user.id,
     },
   });
+
+  delete user.password;
   if (user) {
     res.json({
       status: "success",
